@@ -1,0 +1,38 @@
+name: Deploy to Kubernetes
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+
+      - name: Deploy Apache
+        run: |
+          kubectl apply -f apache-deployment.yaml
+          kubectl apply -f apache-service.yaml
+
+      - name: Deploy Nginx
+        run: |
+          kubectl apply -f nginx-deployment.yaml
+          kubectl apply -f nginx-service.yaml
+
+      - name: Verify Deployments
+        run: |
+          kubectl get deployments
+          kubectl get services
+          kubectl get pods
